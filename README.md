@@ -1,1 +1,1 @@
-# openproceshuis-visio-service
+# Visio service Open Proces Huis
