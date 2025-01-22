@@ -1,5 +1,5 @@
 from string import Template
-from escape_helpers import sparql_escape_uri
+from escape_helpers import sparql_escape_string
 
 def generate_file_uri_select_query(virtual_file_uuid):
   return Template("""
@@ -16,4 +16,4 @@ def generate_file_uri_select_query(virtual_file_uuid):
 
       ?physicalFileUri nie:dataSource ?virtualFileUri .
     }
-  """).substitute(virtual_file_uuid=sparql_escape_uri(virtual_file_uuid))
+  """).substitute(virtual_file_uuid=sparql_escape_string(virtual_file_uuid))
