@@ -45,7 +45,11 @@ def convert_visio_to_bpmn():
     if not os.path.exists(physical_visio_file_path):
         return error("Could not find file in path.", 500)
 
-    bpmn_raw = generate_raw_bpmn(physical_visio_file_path)
+    try:
+        bpmn_raw = generate_raw_bpmn(physical_visio_file_path)
+    except Exception as e:
+        print(e)
+        return error("Something went wrong during conversion", 500)
 
     virtual_bpmn_file_uuid = generate_uuid()
     virtual_bpmn_file_name = f"{os.path.splitext(virtual_visio_file_name)[0]}.bpmn"
