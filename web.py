@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, send_file
 from helpers import error, query, update, generate_uuid
 from sparql_queries import (
     generate_file_uri_select_query,
@@ -13,9 +13,78 @@ from bpmn_tools.layout import graphviz
 from bpmn_tools import util
 from pathlib import Path
 import os
+import subprocess
+import tempfile
 
 STORAGE_FOLDER_PATH = "/share/"
 FILE_URI_PREFIX = "http://mu.semte.ch/services/file-service/files"
+
+
+@app.route("/<virtual_visio_file_uuid>", methods=["GET"])
+def convert_visio_to_file(virtual_visio_file_uuid):
+    virtual_visio_file_uuid = request.args.get("id")
+    if not virtual_visio_file_uuid:
+        return error("No file id provided", 400)
+
+    visio_file_uri_query = generate_file_uri_select_query(virtual_visio_file_uuid)
+    visio_file_uri_result = query(visio_file_uri_query)
+    visio_file_uri_bindings = visio_file_uri_result["results"]["bindings"]
+    if not visio_file_uri_bindings:
+        return error("Not Found", 404)
+
+    visio_file_extension = visio_file_uri_bindings[0]["fileExtension"]["value"]
+    if not visio_file_extension == "vsdx":
+        return error("Unsupported file type, exected .vsdx file.", 415)
+
+    physical_visio_file_uri = visio_file_uri_bindings[0]["physicalFileUri"]["value"]
+    physical_visio_file_path = physical_visio_file_uri.replace(
+        "share://", STORAGE_FOLDER_PATH
+    )
+    if not os.path.exists(physical_visio_file_path):
+        return error("Could not find file in path.", 500)
+
+    target_extension = request.args.get("target-extension", "pdf").lower()
+    if target_extension not in ["pdf"]:
+        return error(f"Unsupported format: {target_extension}", 400)
+
+    virtual_visio_file_name = visio_file_uri_bindings[0]["virtualFileName"]["value"]
+    target_file_name = (
+        f"{os.path.splitext(virtual_visio_file_name)[0]}.{target_extension}"
+    )
+
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        try:
+            subprocess.run(
+                [
+                    "libreoffice",
+                    "--headless",
+                    "--convert-to",
+                    target_extension,
+                    "--outdir",
+                    temporary_directory,
+                    physical_visio_file_path,
+                ],
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            return error(f"Conversion failed: {e.stderr.decode()}", 500)
+
+        original_file_name = os.path.splitext(
+            os.path.basename(physical_visio_file_path)
+        )[0]
+        converted_file_path = os.path.join(
+            temporary_directory, f"{original_file_name}.{target_extension}"
+        )
+
+        if not os.path.exists(converted_file_path):
+            return error("Conversion failed.", 500)
+
+        return send_file(
+            converted_file_path,
+            as_attachment=True,
+            download_name=target_file_name,
+        )
 
 
 @app.route("/", methods=["POST"])
