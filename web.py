@@ -20,8 +20,8 @@ STORAGE_FOLDER_PATH = "/share/"
 FILE_URI_PREFIX = "http://mu.semte.ch/services/file-service/files"
 
 
-@app.route("/<virtual_visio_file_uuid>", methods=["GET"])
-def convert_visio_to_file(virtual_visio_file_uuid):
+@app.route("/convert", methods=["GET"])
+def convert_visio():
     virtual_visio_file_uuid = request.args.get("id")
     if not virtual_visio_file_uuid:
         return error("No file id provided", 400)
@@ -43,7 +43,7 @@ def convert_visio_to_file(virtual_visio_file_uuid):
     if not os.path.exists(physical_visio_file_path):
         return error("Could not find file in path.", 500)
 
-    target_extension = request.args.get("target-extension", "pdf").lower()
+    target_extension = request.args.get("extension", "pdf").lower()
     if target_extension not in ["pdf"]:
         return error(f"Unsupported format: {target_extension}", 400)
 
