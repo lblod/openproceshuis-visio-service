@@ -82,7 +82,7 @@ def convert_visio():
 
         return send_file(
             converted_file_path,
-            as_attachment=True,
+            as_attachment=False,
             download_name=target_file_name,
         )
 
