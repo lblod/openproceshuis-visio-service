@@ -1,4 +1,4 @@
-from flask import request, jsonify, send_file
+from flask import request, jsonify, send_file, Response
 from helpers import error, query, update, generate_uuid
 from sparql_queries import (
     generate_file_uri_select_query,
@@ -44,7 +44,7 @@ def convert_visio():
         return error("Could not find file in path.", 500)
 
     target_extension = request.args.get("extension", "pdf").lower()
-    if target_extension not in ["pdf"]:
+    if target_extension not in ["pdf", "bpmn"]:
         return error(f"Unsupported format: {target_extension}", 400)
 
     virtual_visio_file_name = visio_file_uri_bindings[0]["virtualFileName"]["value"]
@@ -52,38 +52,51 @@ def convert_visio():
         f"{os.path.splitext(virtual_visio_file_name)[0]}.{target_extension}"
     )
 
-    with tempfile.TemporaryDirectory() as temporary_directory:
-        try:
-            subprocess.run(
-                [
-                    "libreoffice",
-                    "--headless",
-                    "--convert-to",
-                    target_extension,
-                    "--outdir",
-                    temporary_directory,
-                    physical_visio_file_path,
-                ],
-                check=True,
-                capture_output=True,
+    if target_extension == "pdf":
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            try:
+                subprocess.run(
+                    [
+                        "libreoffice",
+                        "--headless",
+                        "--convert-to",
+                        target_extension,
+                        "--outdir",
+                        temporary_directory,
+                        physical_visio_file_path,
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
+            except subprocess.CalledProcessError as e:
+                return error(f"Conversion failed: {e.stderr.decode()}", 500)
+
+            original_file_name = os.path.splitext(
+                os.path.basename(physical_visio_file_path)
+            )[0]
+            converted_file_path = os.path.join(
+                temporary_directory, f"{original_file_name}.{target_extension}"
             )
-        except subprocess.CalledProcessError as e:
-            return error(f"Conversion failed: {e.stderr.decode()}", 500)
 
-        original_file_name = os.path.splitext(
-            os.path.basename(physical_visio_file_path)
-        )[0]
-        converted_file_path = os.path.join(
-            temporary_directory, f"{original_file_name}.{target_extension}"
-        )
+            if not os.path.exists(converted_file_path):
+                return error("Conversion failed.", 500)
 
-        if not os.path.exists(converted_file_path):
-            return error("Conversion failed.", 500)
+            return send_file(
+                converted_file_path,
+                as_attachment=True,
+                download_name=target_file_name,
+            )
 
-        return send_file(
-            converted_file_path,
-            as_attachment=False,
-            download_name=target_file_name,
+    elif target_extension == "bpmn":
+        try:
+            raw_bpmn = generate_raw_bpmn(physical_visio_file_path)
+        except Exception as e:
+            return error(f"BPMN conversion failed: {str(e)}", 500)
+
+        return Response(
+            raw_bpmn,
+            mimetype="application/xml",
+            headers={"Content-Disposition": f"attachment; filename={target_file_name}"},
         )
 
 
