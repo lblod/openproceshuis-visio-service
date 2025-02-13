@@ -121,8 +121,35 @@ def convert_visio_to_bpmn():
         triples_per_subject = generate_bbo_triples(
             physical_visio_file_path, virtual_visio_file_uri
         )
+        insert_triple_chunks(triples_per_subject)
     except Exception as e:
         print(e)
         return error("Something went wrong during process steps extraction.", 500)
 
     return triples_per_subject
+
+
+def insert_triple_chunks(triple_chunks, max_triples_per_insert=100):
+    index = 0
+    triples_to_insert = []
+
+    while index < len(triple_chunks):
+        if (
+            len(triples_to_insert) == 0
+            or len(triples_to_insert) + len(triple_chunks[index])
+            <= max_triples_per_insert
+        ):
+            triples_to_insert.extend(triple_chunks[index])
+
+        index += 1
+
+        if (
+            index >= len(triple_chunks)
+            or len(triples_to_insert) + len(triple_chunks[index])
+            >= max_triples_per_insert
+        ):
+            print(triples_to_insert)
+            print("########################")
+            # triples_insert_query = generate_triples_insert_query(triples_to_insert)
+            # update(triples_insert_query)
+            triples_to_insert = []
