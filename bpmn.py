@@ -34,8 +34,8 @@ def generate_raw_bpmn(physical_visio_file_path):
 
     # COLLABORATION
 
-    participant = Participant(process=process)  # TODO: fetch from Visio
-    collaboration = Collaboration()  # TODO: fetch from Visio
+    participant = Participant(process=process)
+    collaboration = Collaboration()
     collaboration.append(participant)
 
     # DIAGRAM

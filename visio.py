@@ -22,6 +22,7 @@ def extract_visio_tasks_flows(
 
     # FLOWS
 
+    flows_temp = {}
     flows = {}
 
     for connector in page.connects:
@@ -35,17 +36,20 @@ def extract_visio_tasks_flows(
         flow_type = connector.xml.attrib.get("FromCell")
 
         if flow_id not in flows:
-            flows[flow_id] = {}
+            flows_temp[flow_id] = {}
 
         if flow_type == "BeginX":
-            flows[flow_id]["source_task_id"] = task_id
+            flows_temp[flow_id]["source_task_id"] = task_id
         elif flow_type == "EndX":
-            flows[flow_id]["target_task_id"] = task_id
+            flows_temp[flow_id]["target_task_id"] = task_id
 
         # Create flow object when both source and target are known
-        if "source_task_id" in flows[flow_id] and "target_task_id" in flows[flow_id]:
-            source_task_id = flows[flow_id]["source_task_id"]
-            target_task_id = flows[flow_id]["target_task_id"]
+        if (
+            "source_task_id" in flows_temp[flow_id]
+            and "target_task_id" in flows_temp[flow_id]
+        ):
+            source_task_id = flows_temp[flow_id]["source_task_id"]
+            target_task_id = flows_temp[flow_id]["target_task_id"]
 
             flows[flow_id] = generate_flow_fn(
                 flow_id, source_task_id, target_task_id, tasks
