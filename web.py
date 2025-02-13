@@ -118,9 +118,11 @@ def convert_visio_to_bpmn():
         return error("Could not find file in path.", 500)
 
     try:
-        generate_bbo_triples(physical_visio_file_path)
+        triples_per_subject = generate_bbo_triples(
+            physical_visio_file_path, virtual_visio_file_uri
+        )
     except Exception as e:
         print(e)
         return error("Something went wrong during process steps extraction.", 500)
 
-    return "Process steps extracted."
+    return triples_per_subject

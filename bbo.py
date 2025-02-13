@@ -38,7 +38,7 @@ def generate_bbo_flow(_, source_task_id, target_task_id, tasks):
     return flow_uri, flow
 
 
-def generate_bbo_triples(physical_visio_file_path):
+def generate_bbo_triples(physical_visio_file_path, virtual_visio_file_uri):
     triples_per_subject = []
 
     # PROCESS
@@ -50,6 +50,7 @@ def generate_bbo_triples(physical_visio_file_path):
         f"<{process_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#FlowElementsContainer> .",
         f"<{process_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#CallableElement> .",
         f"<{process_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#RootElement> .",
+        f"<{process_uri}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{virtual_visio_file_uri}> .",
     ]
 
     triples_per_subject.append(process)
@@ -68,4 +69,4 @@ def generate_bbo_triples(physical_visio_file_path):
         )
         triples_per_subject.append(triples)
 
-    print(triples_per_subject)
+    return triples_per_subject
