@@ -1,11 +1,8 @@
+from bbo import generate_bbo_triples
 from bpmn import generate_raw_bpmn
-from flask import request, jsonify, send_file, Response
-from helpers import error, query, update, generate_uuid
-from sparql_queries import (
-    generate_file_uri_select_query,
-    generate_bpmn_file_insert_query,
-)
-from pathlib import Path
+from flask import request, send_file, Response
+from helpers import error, query
+from sparql_queries import generate_file_uri_select_query
 import os
 import subprocess
 import tempfile
@@ -106,7 +103,6 @@ def convert_visio_to_bpmn():
     if not visio_file_uri_bindings:
         return error("Not Found", 404)
 
-    virtual_visio_file_name = visio_file_uri_bindings[0]["virtualFileName"]["value"]
     virtual_visio_file_uri = visio_file_uri_bindings[0]["virtualFileUri"]["value"]
 
     physical_visio_file_uri = visio_file_uri_bindings[0]["physicalFileUri"]["value"]
@@ -122,40 +118,9 @@ def convert_visio_to_bpmn():
         return error("Could not find file in path.", 500)
 
     try:
-        bpmn_raw = generate_raw_bpmn(physical_visio_file_path)
+        generate_bbo_triples(physical_visio_file_path)
     except Exception as e:
         print(e)
-        return error("Something went wrong during conversion", 500)
+        return error("Something went wrong during process steps extraction.", 500)
 
-    virtual_bpmn_file_uuid = generate_uuid()
-    virtual_bpmn_file_name = f"{os.path.splitext(virtual_visio_file_name)[0]}.bpmn"
-    virtual_bpmn_file_uri = f"{FILE_URI_PREFIX}/{virtual_bpmn_file_uuid}"
-
-    physical_bpmn_file_uuid = generate_uuid()
-    physical_bpmn_file_name = f"{physical_bpmn_file_uuid}.bpmn"
-    physical_bpmn_file_uri = f"share://{physical_bpmn_file_name}"
-    physical_bpmn_file_path = physical_bpmn_file_uri.replace(
-        "share://", STORAGE_FOLDER_PATH
-    )
-
-    Path(physical_bpmn_file_path).write_text(bpmn_raw)
-
-    bpmn_file_insert_query = generate_bpmn_file_insert_query(
-        virtual_bpmn_file_uuid,
-        virtual_bpmn_file_name,
-        virtual_bpmn_file_uri,
-        physical_bpmn_file_uuid,
-        physical_bpmn_file_name,
-        physical_bpmn_file_uri,
-        os.path.getsize(physical_bpmn_file_path),
-        virtual_visio_file_uri,
-    )
-    update(bpmn_file_insert_query)
-
-    return jsonify(
-        {
-            "message": "Visio file successfully converted to BPMN",
-            "visio-file-id": virtual_visio_file_uuid,
-            "bpmn-file-id": virtual_bpmn_file_uuid,
-        }
-    ), 201
+    return "Process steps extracted."
