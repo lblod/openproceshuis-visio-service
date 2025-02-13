@@ -1,6 +1,14 @@
 from escape_helpers import sparql_escape_string
 
 
+def generate_triples_insert_query(triples):
+    triples = "\n".join(triples)
+    return f"""
+    INSERT DATA {{
+      {triples}
+    }}"""
+
+
 def generate_file_uri_select_query(virtual_file_uuid):
     return f"""
     PREFIX mu: <http://mu.semte.ch/vocabularies/core/>

@@ -2,7 +2,7 @@ from bbo import generate_bbo_triples
 from bpmn import generate_raw_bpmn
 from flask import request, send_file, Response
 from helpers import error, query
-from sparql_queries import generate_file_uri_select_query
+from sparql_queries import generate_file_uri_select_query, generate_triples_insert_query
 import os
 import subprocess
 import tempfile
@@ -126,7 +126,7 @@ def convert_visio_to_bpmn():
         print(e)
         return error("Something went wrong during process steps extraction.", 500)
 
-    return triples_per_subject
+    return "Process steps extracted."
 
 
 def insert_triple_chunks(triple_chunks, max_triples_per_insert=100):
@@ -148,8 +148,6 @@ def insert_triple_chunks(triple_chunks, max_triples_per_insert=100):
             or len(triples_to_insert) + len(triple_chunks[index])
             >= max_triples_per_insert
         ):
-            print(triples_to_insert)
-            print("########################")
-            # triples_insert_query = generate_triples_insert_query(triples_to_insert)
+            triples_insert_query = generate_triples_insert_query(triples_to_insert)
             # update(triples_insert_query)
             triples_to_insert = []
