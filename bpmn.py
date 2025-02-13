@@ -7,14 +7,14 @@ from bpmn_tools.layout import graphviz
 from bpmn_tools import util
 
 
-def generate_bpmn_task(id, name):
-    return Task(name, id=f"task_{id}")
+def generate_bpmn_task(id, label):
+    return Task(label, id=f"task_{id}")
 
 
-def generate_bpmn_flow(id, source_task_id, target_task_id, tasks):
+def generate_bpmn_flow(id, label, source_task_id, target_task_id, tasks):
     source_task = tasks[source_task_id]
     target_task = tasks[target_task_id]
-    return Flow(source_task, target_task, id=f"flow_{id}")  # TODO: set flow name
+    return Flow(source_task, target_task, label, id=f"flow_{id}")
 
 
 def generate_raw_bpmn(physical_visio_file_path):

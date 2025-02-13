@@ -18,7 +18,8 @@ def extract_visio_tasks_flows(
         if shape.shape_type == "Shape":
             continue
 
-        tasks[shape.ID] = generate_task_fn(shape.ID, shape.text.strip())
+        label = shape.text.strip() if shape.text is not None else ""
+        tasks[shape.ID] = generate_task_fn(shape.ID, label)
 
     # FLOWS
 
@@ -51,8 +52,11 @@ def extract_visio_tasks_flows(
             source_task_id = flows_temp[flow_id]["source_task_id"]
             target_task_id = flows_temp[flow_id]["target_task_id"]
 
+            flow_shape = page.find_shape_by_id(flow_id)
+            label = flow_shape.text.strip() if flow_shape.text is not None else ""
+
             flows[flow_id] = generate_flow_fn(
-                flow_id, source_task_id, target_task_id, tasks
+                flow_id, label, source_task_id, target_task_id, tasks
             )
 
     return tasks, flows

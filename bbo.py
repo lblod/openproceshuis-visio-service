@@ -6,23 +6,23 @@ from visio import extract_visio_tasks_flows
 BASE_URI = "http://data.lblod.info/"
 
 
-def generate_bbo_task(_, name):
+def generate_bbo_task(_, label):
     task_uri = BASE_URI + generate_uuid()
 
-    name = re.sub(r"\s+", " ", name)
+    label = re.sub(r"\s+", " ", label)
 
     task = [
         f"<{task_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#Task> .",
         f"<{task_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#Activity> .",
         f"<{task_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#FlowNode> .",
         f"<{task_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#FlowElement> .",
-        f'<{task_uri}> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#name> "{name}" .',
+        f'<{task_uri}> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#name> "{label}" .',
     ]
 
     return task_uri, task
 
 
-def generate_bbo_flow(_, source_task_id, target_task_id, tasks):
+def generate_bbo_flow(_, label, source_task_id, target_task_id, tasks):
     flow_uri = BASE_URI + generate_uuid()
 
     source_task_uri = tasks[source_task_id][0]
@@ -33,6 +33,7 @@ def generate_bbo_flow(_, source_task_id, target_task_id, tasks):
         f"<{flow_uri}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#FlowElement> .",
         f"<{flow_uri}> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#has_sourceRef> <{source_task_uri}> .",
         f"<{flow_uri}> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#has_targetRef> <{target_task_uri}> .",
+        f'<{flow_uri}> <https://www.irit.fr/recherches/MELODI/ontologies/BBO#name> "{label}" .',
     ]
 
     return flow_uri, flow
