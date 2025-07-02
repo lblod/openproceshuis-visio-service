@@ -39,7 +39,7 @@ def extract_visio_tasks_flows(
             flow_id = connector.xml.attrib.get("FromSheet")
             flow_type = connector.xml.attrib.get("FromCell")
 
-            if flow_id not in flows:
+            if flow_id not in flows_temp:
                 flows_temp[flow_id] = {}
 
             if flow_type == "BeginX":
