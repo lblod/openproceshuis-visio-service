@@ -15,8 +15,11 @@ def extract_visio_tasks_flows(
         # TASKS
 
         tasks = {}
+        shapes_by_id = {}
 
         for shape in page.child_shapes:  # TODO: also consider deeper nested shapes
+            shapes_by_id[shape.ID] = shape
+            
             # 'Shape' shapes are 'help' elements in Visio --> of no use in BPMN
             if shape.shape_type == "Shape":
                 continue
@@ -55,7 +58,7 @@ def extract_visio_tasks_flows(
                 source_task_id = flows_temp[flow_id]["source_task_id"]
                 target_task_id = flows_temp[flow_id]["target_task_id"]
 
-                flow_shape = page.find_shape_by_id(flow_id)
+                flow_shape = shapes_by_id[flow_id]
                 label = flow_shape.text.strip() if flow_shape.text is not None else ""
 
                 flows[flow_id] = generate_flow_fn(
